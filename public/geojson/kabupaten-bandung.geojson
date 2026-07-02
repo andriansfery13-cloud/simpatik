@@ -1,0 +1,24 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "NAMOBJ": "Kabupaten Bandung",
+        "REMARK": "Batas Administrasi Mock"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [107.3, -7.2],
+            [107.8, -7.2],
+            [107.8, -6.8],
+            [107.3, -6.8],
+            [107.3, -7.2]
+          ]
+        ]
+      }
+    }
+  ]
+}
