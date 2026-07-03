@@ -185,11 +185,23 @@ class KegiatanController extends Controller
     public function downloadTemplate()
     {
         $headers = [
-            'ID Desa', 'Nama Desa', 'ID Sumber Dana', 'Sumber Dana',
-            'Nama Kegiatan', 'Deskripsi', 'Lokasi', 'Pagu Anggaran',
-            'Realisasi Anggaran', 'Progres Fisik', 'Tanggal Mulai',
-            'Tanggal Selesai', 'Status', 'Pelaksana', 'Penanggung Jawab',
-            'Tahun Anggaran', 'Periode Anggaran',
+            'ID Desa',
+            'Nama Desa',
+            'ID Sumber Dana',
+            'Sumber Dana',
+            'Nama Kegiatan',
+            'Deskripsi',
+            'Lokasi',
+            'Pagu Anggaran',
+            'Realisasi Anggaran',
+            'Progres Fisik',
+            'Tanggal Mulai',
+            'Tanggal Selesai',
+            'Status',
+            'Pelaksana',
+            'Penanggung Jawab',
+            'Tahun Anggaran',
+            'Periode Anggaran',
         ];
 
         $user = auth()->user();
@@ -209,25 +221,40 @@ class KegiatanController extends Controller
 
         $data = [
             [
-                $idDesa, $namaDesa, '1', 'Dana Desa 2024',
-                'Pembangunan Jalan Desa', 'Pengecoran jalan lingkungan RT 03',
-                'RT 03 RW 01', '150000000', '0', '0',
-                '2024-03-01', '2024-06-30', 'Belum Mulai',
-                'CV Karya Mandiri', 'H. Ahmad', date('Y'), 'Semester 1',
+                $idDesa,
+                $namaDesa,
+                '1',
+                'Dana Desa 2024',
+                'Pembangunan Jalan Desa',
+                'Pengecoran jalan lingkungan RT 03',
+                'RT 03 RW 01',
+                '150000000',
+                '0',
+                '0',
+                '2024-03-01',
+                '2024-06-30',
+                'Belum Mulai',
+                'CV Karya Mandiri',
+                'H. Ahmad',
+                date('Y'),
+                'Semester 1',
             ]
         ];
 
-        $export = new class($headers, $data) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
+        $export = new class ($headers, $data) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
             protected $headings;
             protected $data;
-            public function __construct($headings, $data) {
+            public function __construct($headings, $data)
+            {
                 $this->headings = $headings;
                 $this->data = $data;
             }
-            public function array(): array {
+            public function array(): array
+            {
                 return $this->data;
             }
-            public function headings(): array {
+            public function headings(): array
+            {
                 return $this->headings;
             }
         };

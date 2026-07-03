@@ -116,16 +116,22 @@ class LaporanController extends Controller
         $wilayahLabel = 'Seluruh Kabupaten Bandung';
         $kecamatanNama = null;
         $desaNama = null;
+        $kopSurat = null;
 
         if ($desaId) {
-            $desa = Desa::with('kecamatan')->find($desaId);
+            $desa = Desa::with('kecamatan.kopSurat')->find($desaId);
             $wilayahLabel = 'Desa ' . $desa->nama . ', Kec. ' . $desa->kecamatan->nama;
             $kecamatanNama = $desa->kecamatan->nama;
             $desaNama = $desa->nama;
+            $kopSurat = $desa->kecamatan->kopSurat ?? null;
         } elseif ($kecamatanId) {
-            $kec = Kecamatan::find($kecamatanId);
+            $kec = Kecamatan::with('kopSurat')->find($kecamatanId);
             $wilayahLabel = 'Kecamatan ' . $kec->nama;
             $kecamatanNama = $kec->nama;
+            $kopSurat = $kec->kopSurat ?? null;
+        } elseif ($user->isKecamatan()) {
+            $kec = Kecamatan::with('kopSurat')->find($user->kecamatan_id);
+            $kopSurat = $kec->kopSurat ?? null;
         }
 
         // Summary stats
@@ -217,7 +223,7 @@ class LaporanController extends Controller
             'kecamatanNama', 'desaNama',
             'kegiatans', 'summary', 'perKecamatan', 'perDesa',
             'includeFoto', 'includeKoordinat',
-            'kecamatanId', 'desaId'
+            'kecamatanId', 'desaId', 'kopSurat'
         );
 
         return view('laporan.preview', $data);

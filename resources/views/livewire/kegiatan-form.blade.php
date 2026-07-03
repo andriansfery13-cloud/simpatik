@@ -77,12 +77,11 @@
             </div>
 
             <div>
-                <label for="periode_anggaran" class="form-label">Periode Anggaran</label>
-                <select wire:model.blur="periode_anggaran" id="periode_anggaran" class="form-select @error('periode_anggaran') border-red-500 @enderror">
-                    <option value="">-- Pilih Periode (Opsional) --</option>
-                    <option value="Semester 1">Semester 1</option>
-                    <option value="Semester 2">Semester 2</option>
-                    <option value="Semester 3">Semester 3</option>
+                <label for="periode_anggaran" class="form-label">Jadwal Pelaksanaan</label>
+                <select wire:model.live="periode_anggaran" id="periode_anggaran" class="form-select @error('periode_anggaran') border-red-500 @enderror">
+                    <option value="">-- Pilih Tahap (Opsional) --</option>
+                    <option value="Tahap 1">Tahap 1</option>
+                    <option value="Tahap 2">Tahap 2</option>
                 </select>
                 @error('periode_anggaran') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
             </div>

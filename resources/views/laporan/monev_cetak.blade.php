@@ -27,35 +27,44 @@
         
         /* Kop Surat */
         .kop-surat {
-            display: flex;
-            align-items: center;
-            border-bottom: 3px solid #000;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            position: relative;
+            margin-bottom: 5px;
         }
-        .kop-surat::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
+        .kop-table {
             width: 100%;
-            border-bottom: 1px solid #000;
+            border: none;
+            border-collapse: collapse;
+        }
+        .kop-table td {
+            border: none;
+            vertical-align: middle;
+            padding: 0;
+        }
+        .kop-logo-td {
+            width: 80px;
+            padding-right: 10px;
         }
         .kop-logo {
-            width: 80px;
-            height: auto;
-            position: absolute;
-            left: 0;
+            width: 70px;
+            height: 70px;
         }
         .kop-text {
-            width: 100%;
             text-align: center;
-            padding: 0 90px;
         }
         .kop-pemerintah { font-size: 14pt; font-weight: bold; }
         .kop-instansi { font-size: 16pt; font-weight: bold; }
         .kop-alamat { font-size: 10pt; }
+        .kop-line {
+            border: none;
+            border-top: 3px solid #000;
+            margin: 0 0 2px 0;
+            padding: 0;
+        }
+        .kop-line-thin {
+            border: none;
+            border-top: 1px solid #000;
+            margin: 0 0 15px 0;
+            padding: 0;
+        }
 
         /* Judul */
         .judul-surat {
@@ -111,36 +120,111 @@
             button { display: none; }
         }
         
-        .print-btn {
+        .action-bar {
             position: fixed;
             top: 20px;
             right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 9999;
+            font-family: Arial, sans-serif;
+        }
+        .action-btn {
             padding: 10px 20px;
-            background: #4f46e5;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-family: Arial, sans-serif;
             font-weight: bold;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
+        .btn-pdf { background: #4f46e5; }
+        .btn-pdf:hover { background: #4338ca; }
+        .btn-word { background: #2563eb; }
+        .btn-word:hover { background: #1d4ed8; }
     </style>
 </head>
 <body>
-    <button class="print-btn" onclick="window.print()">Cetak PDF (Ctrl+P)</button>
+    <div class="action-bar">
+        <button class="action-btn btn-pdf" onclick="window.print()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            Cetak PDF
+        </button>
+        <button class="action-btn btn-word" onclick="saveToWord()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            Simpan ke Word (.doc)
+        </button>
+    </div>
+
+    <script>
+    function saveToWord() {
+        // Clone the body content without the action bar
+        var content = document.body.cloneNode(true);
+        var actionBar = content.querySelector('.action-bar');
+        if (actionBar) actionBar.remove();
+
+        // Get all styles
+        var styles = '';
+        var styleSheets = document.querySelectorAll('style');
+        styleSheets.forEach(function(s) {
+            styles += s.innerHTML;
+        });
+
+        var html = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office"
+                  xmlns:w="urn:schemas-microsoft-com:office:word"
+                  xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="UTF-8">
+                <!--[if gte mso 9]>
+                <xml>
+                    <w:WordDocument>
+                        <w:View>Print</w:View>
+                        <w:Zoom>100</w:Zoom>
+                        <w:DoNotOptimizeForBrowser/>
+                    </w:WordDocument>
+                </xml>
+                <![endif]-->
+                <style>${styles}</style>
+            </head>
+            <body>${content.innerHTML}</body>
+            </html>`;
+
+        var blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'Berita_Acara_Monev_{{ str_replace(" ", "_", $anggaran->desa->nama) }}_{{ $anggaran->tahun_anggaran }}.doc';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+    </script>
 
     {{-- Kop Surat --}}
     <div class="kop-surat">
-        @if($kopSurat && $kopSurat->logo_path)
-            <img src="{{ asset('storage/' . $kopSurat->logo_path) }}" alt="Logo" class="kop-logo">
-        @endif
-        <div class="kop-text">
-            <div class="kop-pemerintah uppercase">{{ $kopSurat->pemerintah ?? 'PEMERINTAH KABUPATEN BANDUNG' }}</div>
-            <div class="kop-instansi uppercase">{{ $kopSurat->instansi ?? 'KECAMATAN CIPARAY' }}</div>
-            <div class="kop-alamat">{{ $kopSurat->alamat ?? 'Jalan Pamageran No. 2 Ciparay Telp. (022) 5950372' }}</div>
-            <div class="kop-alamat">{{ $kopSurat->kontak ?? 'Email: kec.ciparay@bandungkab.go.id' }}</div>
-        </div>
+        <table class="kop-table">
+            <tr>
+                @if($kopSurat && $kopSurat->logo_path)
+                <td class="kop-logo-td">
+                    <img src="{{ asset('storage/' . $kopSurat->logo_path) }}" alt="Logo" class="kop-logo" width="70" height="70" style="width:70px;height:70px;">
+                </td>
+                @endif
+                <td class="kop-text">
+                    <div class="kop-pemerintah uppercase">{{ $kopSurat->pemerintah ?? 'PEMERINTAH KABUPATEN BANDUNG' }}</div>
+                    <div class="kop-instansi uppercase">{{ $kopSurat->instansi ?? 'KECAMATAN CIPARAY' }}</div>
+                    <div class="kop-alamat">{{ $kopSurat->alamat ?? 'Jalan Pamageran No. 2 Ciparay Telp. (022) 5950372' }}</div>
+                    <div class="kop-alamat">{{ $kopSurat->kontak ?? 'Email: kec.ciparay@bandungkab.go.id' }}</div>
+                </td>
+            </tr>
+        </table>
     </div>
+    <hr class="kop-line">
+    <hr class="kop-line-thin">
 
     {{-- Judul --}}
     <div class="judul-surat">
@@ -213,12 +297,66 @@
                     <td>{{ $k->nama_kegiatan }}</td>
                     <td>
                         @if($k->monev)
+                            @php
+                                // Daftar item Administrasi Keuangan
+                                $keuanganItems = [
+                                    'bku' => 'Buku Kas Umum (BKU)',
+                                    'buku_bank' => 'Buku Bank & Rekening Koran',
+                                    'buku_pajak' => 'Buku Pajak',
+                                    'spj' => 'Register SPJ',
+                                    'bukti_transfer' => 'Bukti Pengeluaran / Transfer Sah',
+                                ];
+                                // Daftar item Pelaksanaan Kegiatan
+                                $pelaksanaanItems = [
+                                    'sk_tpk' => 'SK TPK',
+                                    'rab' => 'RAB & Gambar Teknis',
+                                    'kontrak' => 'Kontrak Kerja / Surat Pesanan',
+                                    'dokumentasi' => 'Dokumentasi Pelaksanaan (0%, 50%, 100%)',
+                                ];
+
+                                $aspekKeuangan = $k->monev->aspek_keuangan ?? [];
+                                $aspekPelaksanaan = $k->monev->aspek_pelaksanaan ?? [];
+
+                                // Cari item yang TIDAK dicentang
+                                $kekuranganKeuangan = [];
+                                foreach ($keuanganItems as $key => $label) {
+                                    if (!in_array($key, $aspekKeuangan)) {
+                                        $kekuranganKeuangan[] = $label;
+                                    }
+                                }
+                                $kekuranganPelaksanaan = [];
+                                foreach ($pelaksanaanItems as $key => $label) {
+                                    if (!in_array($key, $aspekPelaksanaan)) {
+                                        $kekuranganPelaksanaan[] = $label;
+                                    }
+                                }
+
+                                $isLengkap = empty($kekuranganKeuangan) && empty($kekuranganPelaksanaan);
+                            @endphp
                             <ul>
-                                <li>Kegiatan sudah dilaksanakan</li>
-                                @if($k->monev->catatan_saran)
-                                <li>Kekurangan: {{ $k->monev->catatan_saran }}</li>
+                                <li>Kegiatan Sudah Dilaksanakan</li>
+                                @if($isLengkap)
+                                    <li>LPJ Sudah Lengkap</li>
                                 @else
-                                <li>LPJ Lengkap</li>
+                                    <li><b>LPJ Belum Lengkap</b></li>
+                                    @if(!empty($kekuranganKeuangan))
+                                        <li>Administrasi Keuangan belum lengkap:
+                                            <ul>
+                                                @foreach($kekuranganKeuangan as $item)
+                                                    <li>{{ $item }}</li>
+                                                @endforeach
+                                            </ul>
+                                        </li>
+                                    @endif
+                                    @if(!empty($kekuranganPelaksanaan))
+                                        <li>Pelaksanaan Kegiatan belum lengkap:
+                                            <ul>
+                                                @foreach($kekuranganPelaksanaan as $item)
+                                                    <li>{{ $item }}</li>
+                                                @endforeach
+                                            </ul>
+                                        </li>
+                                    @endif
                                 @endif
                             </ul>
                         @else
@@ -302,25 +440,22 @@
                     </td>
                 </tr>
                 <tr>
-                    <th colspan="2" class="uppercase">{{ str_starts_with(strtoupper($anggaran->desa->nama), 'DESA') ? 'KEPALA ' . strtoupper($anggaran->desa->nama) : 'KEPALA DESA ' . strtoupper($anggaran->desa->nama) }}</th>
+                    <th style="width: 50%">{{ str_starts_with(strtoupper($anggaran->desa->nama), 'DESA') ? 'KEPALA ' . strtoupper($anggaran->desa->nama) : 'KEPALA DESA ' . strtoupper($anggaran->desa->nama) }}</th>
+                    <th style="width: 50%">{{ $camat ? 'CAMAT' : '' }}</th>
                 </tr>
                 <tr>
-                    <td colspan="2" style="height: 80px; vertical-align: bottom; text-align: center; border:none;">
+                    <td style="height: 80px; vertical-align: bottom; text-align: center">
                         <b>({{ strtoupper($kepalaDesa) }})</b>
+                    </td>
+                    <td style="height: 80px; vertical-align: bottom; text-align: center">
+                        @if($camat)
+                        <b>({{ strtoupper($camat) }})</b>
+                        @endif
                     </td>
                 </tr>
             </tbody>
         </table>
     </div>
-    
-    @if($camat)
-    <div class="ttd-grid" style="grid-template-columns: 1fr;">
-        <div class="ttd-box">
-            <span>CAMAT</span>
-            <span class="ttd-name">{{ strtoupper($camat) }}</span>
-        </div>
-    </div>
-    @endif
 
 </body>
 </html>

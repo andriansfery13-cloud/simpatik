@@ -92,6 +92,19 @@ class KegiatanForm extends Component
             : [];
     }
 
+    public function updatedPeriodeAnggaran($value)
+    {
+        $year = date('Y');
+        
+        if ($value === 'Tahap 1') {
+            $this->tanggal_mulai = "$year-01-01";
+            $this->tanggal_selesai = "$year-06-30";
+        } elseif ($value === 'Tahap 2') {
+            $this->tanggal_mulai = "$year-07-01";
+            $this->tanggal_selesai = "$year-09-30";
+        }
+    }
+
     public function updated($propertyName)
     {
         $this->validateOnly($propertyName, $this->rules());
@@ -103,7 +116,7 @@ class KegiatanForm extends Component
             'nama_kegiatan' => 'required|string|max:255',
             'desa_id' => 'required|exists:desas,id',
             'sumber_dana_id' => 'required|exists:sumber_danas,id',
-            'periode_anggaran' => 'nullable|string|in:Semester 1,Semester 2,Semester 3',
+            'periode_anggaran' => 'nullable|string|in:Tahap 1,Tahap 2',
             'deskripsi' => 'nullable|string',
             'lokasi' => 'nullable|string|max:255',
             'latitude' => 'nullable|numeric',

@@ -59,6 +59,48 @@
                 size: A4 landscape;
                 margin: 1cm;
             }
+            .kop-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 5px;
+            }
+            .kop-table td {
+                vertical-align: middle;
+                border: none;
+                padding: 0;
+            }
+            .kop-logo-td {
+                width: 90px;
+                text-align: center;
+                padding-right: 15px;
+            }
+            .kop-text {
+                text-align: center;
+                padding-right: 90px; /* balance logo width */
+            }
+            .kop-pemerintah {
+                font-size: 14pt;
+                font-weight: bold;
+                letter-spacing: 1px;
+            }
+            .kop-instansi {
+                font-size: 18pt;
+                font-weight: bold;
+                letter-spacing: 1px;
+            }
+            .kop-alamat {
+                font-size: 10pt;
+            }
+            .kop-line {
+                border-top: 3px solid black;
+                margin-top: 2px;
+                margin-bottom: 1px;
+            }
+            .kop-line-thin {
+                border-top: 1px solid black;
+                margin-top: 0;
+                margin-bottom: 20px;
+            }
         }
     </style>
 </head>
@@ -86,21 +128,33 @@
     <div class="max-w-7xl mx-auto bg-white p-10 md:p-12 shadow-lg md:rounded-lg border border-gray-200 min-h-screen">
         
         {{-- Report Header --}}
-        <div class="border-b-4 border-gray-800 pb-6 mb-8 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <div class="w-20 h-20 bg-gray-100 border-2 border-gray-800 rounded-full flex items-center justify-center">
-                    <span class="text-3xl">🏛</span>
-                </div>
-                <div>
-                    <h1 class="text-2xl font-bold uppercase tracking-tight text-gray-900">Pemerintah Kabupaten Bandung</h1>
-                    <h2 class="text-lg font-semibold text-gray-700">Sistem Monitoring Pembangunan Terintegrasi (SIMPATIK)</h2>
-                    <p class="text-sm text-gray-500 mt-1">Soreang, Kabupaten Bandung, Jawa Barat</p>
-                </div>
-            </div>
-            <div class="text-right">
-                <p class="text-sm font-bold text-gray-900 uppercase">Dokumen Laporan</p>
-                <p class="text-sm text-gray-600 mt-1">{{ now()->isoFormat('D MMMM Y') }}</p>
-                <p class="text-xs text-gray-500 mt-0.5">Dicetak oleh: {{ auth()->user()->name }}</p>
+        {{-- Report Header (Kop Surat) --}}
+        <div class="mb-8 print-break-inside-avoid">
+            <table class="kop-table">
+                <tr>
+                    @if(isset($kopSurat) && $kopSurat->logo_path)
+                    <td class="kop-logo-td">
+                        <img src="{{ asset('storage/' . $kopSurat->logo_path) }}" alt="Logo" width="70" height="70" style="width:70px;height:70px;">
+                    </td>
+                    @else
+                    <td class="kop-logo-td">
+                        <div class="w-16 h-16 bg-gray-100 border-2 border-gray-800 rounded-full flex items-center justify-center mx-auto">
+                            <span class="text-2xl">🏛</span>
+                        </div>
+                    </td>
+                    @endif
+                    <td class="kop-text">
+                        <div class="kop-pemerintah uppercase">{{ $kopSurat->pemerintah ?? 'PEMERINTAH KABUPATEN BANDUNG' }}</div>
+                        <div class="kop-instansi uppercase">{{ $kopSurat->instansi ?? 'SISTEM MONITORING PEMBANGUNAN TERINTEGRASI' }}</div>
+                        <div class="kop-alamat">{{ $kopSurat->alamat ?? 'Soreang, Kabupaten Bandung, Jawa Barat' }}</div>
+                        <div class="kop-alamat">{{ $kopSurat->kontak ?? '' }}</div>
+                    </td>
+                </tr>
+            </table>
+            <hr class="kop-line">
+            <hr class="kop-line-thin">
+            <div class="text-right mt-2 no-print">
+                <p class="text-xs text-gray-500">Dicetak oleh: {{ auth()->user()->name }} pada {{ now()->isoFormat('D MMMM Y') }}</p>
             </div>
         </div>
 
