@@ -319,4 +319,25 @@ class UserController extends Controller
 
         return redirect()->route('users.index')->with('success', 'Pengguna berhasil dihapus.');
     }
+
+    /**
+     * Login as another user (Impersonate)
+     */
+    public function impersonate(User $user)
+    {
+        $authUser = auth()->user();
+
+        // Authorization
+        if (!$authUser->isKabupaten() && $user->kecamatan_id !== $authUser->kecamatan_id) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        if ($user->id === $authUser->id) {
+            return redirect()->back()->with('error', 'Anda sudah login sebagai pengguna ini.');
+        }
+
+        auth()->login($user);
+
+        return redirect()->route('dashboard')->with('success', 'Berhasil login sebagai ' . $user->name);
+    }
 }

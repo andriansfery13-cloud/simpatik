@@ -37,10 +37,11 @@ class Kegiatan extends Model
                 ->first();
 
             if ($anggaran) {
-                // Mengambil total pagu_anggaran yang dialokasikan di kegiatan ini
+                // Hanya hitung realisasi dari kegiatan yang berjalan atau selesai
                 $totalDipakai = static::where('desa_id', $desa_id)
                     ->where('sumber_dana_id', $sumber_dana_id)
                     ->where('tahun_anggaran', $tahun)
+                    ->whereIn('status', ['berjalan', 'selesai'])
                     ->sum('pagu_anggaran');
                 
                 $anggaran->update(['realisasi' => $totalDipakai]);

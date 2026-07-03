@@ -33,6 +33,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // User Management
     Route::get('users/export', [UserController::class, 'export'])->name('users.export');
     Route::post('users/import', [UserController::class, 'import'])->name('users.import');
+    Route::post('users/{user}/impersonate', [UserController::class, 'impersonate'])->name('users.impersonate');
     Route::get('users/template', [UserController::class, 'downloadTemplate'])->name('users.template');
     Route::resource('users', UserController::class);
 

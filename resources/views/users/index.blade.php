@@ -105,6 +105,12 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                 </a>
                                 @if(auth()->id() !== $u->id)
+                                <form action="{{ route('users.impersonate', $u->id) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin login sebagai {{ $u->name }}?');">
+                                    @csrf
+                                    <button type="submit" class="p-1.5 bg-green-50 text-green-600 rounded hover:bg-green-100" title="Login sebagai pengguna ini">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                                    </button>
+                                </form>
                                 <form action="{{ route('users.destroy', $u->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun ini?');">
                                     @csrf
                                     @method('DELETE')

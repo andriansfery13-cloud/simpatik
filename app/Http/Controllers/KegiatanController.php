@@ -36,6 +36,12 @@ class KegiatanController extends Controller
         if ($request->filled('desa_id')) {
             $query->where('desa_id', $request->desa_id);
         }
+        if ($request->filled('sumber_dana_id')) {
+            $query->where('sumber_dana_id', $request->sumber_dana_id);
+        }
+        if ($request->filled('tahun_anggaran')) {
+            $query->where('tahun_anggaran', $request->tahun_anggaran);
+        }
 
         $kegiatans = $query->orderBy('created_at', 'desc')->paginate(15);
         $desas = $this->getAccessibleDesas($user);
