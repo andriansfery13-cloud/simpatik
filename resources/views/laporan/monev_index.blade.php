@@ -95,7 +95,7 @@
                             </div>
                             <div class="space-y-2">
                                 <label class="form-label font-bold text-gray-700">Camat (Opsional)</label>
-                                <input type="text" name="camat" class="form-input" placeholder="Kosongkan jika tidak perlu TTD Camat">
+                                <input type="text" name="camat" class="form-input" value="{{ $selectedDesa->kecamatan->camat ?? '' }}" placeholder="Kosongkan jika tidak perlu TTD Camat">
                             </div>
                         </div>
 
