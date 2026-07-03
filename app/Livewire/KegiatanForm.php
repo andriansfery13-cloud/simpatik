@@ -69,8 +69,8 @@ class KegiatanForm extends Component
             $this->pagu_anggaran = $kegiatan->pagu_anggaran;
             $this->realisasi_anggaran = $kegiatan->realisasi_anggaran ?? '';
             $this->progres_fisik = $kegiatan->progres_fisik ?? '';
-            $this->tanggal_mulai = $kegiatan->tanggal_mulai ?? '';
-            $this->tanggal_selesai = $kegiatan->tanggal_selesai ?? '';
+            $this->tanggal_mulai = $kegiatan->tanggal_mulai ? $kegiatan->tanggal_mulai->format('Y-m-d') : '';
+            $this->tanggal_selesai = $kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->format('Y-m-d') : '';
             $this->pelaksana = $kegiatan->pelaksana ?? '';
             $this->penanggung_jawab = $kegiatan->penanggung_jawab ?? '';
             $this->catatan = $kegiatan->catatan ?? '';

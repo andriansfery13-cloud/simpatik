@@ -144,7 +144,7 @@ class DesaController extends Controller
         ]);
 
         try {
-            Excel::import(new DesaImport, $request->file('file_excel'));
+            Excel::import(new DesaImport(auth()->user()), $request->file('file_excel'));
             return redirect()->route('desa.index')->with('success', 'Data desa berhasil diimport.');
         } catch (\Exception $e) {
             return redirect()->route('desa.index')->with('error', 'Terjadi kesalahan saat import: ' . $e->getMessage());
@@ -168,10 +168,19 @@ class DesaController extends Controller
             'Status Aktif'
         ];
 
+        $user = auth()->user();
+        $idKecamatan = '1';
+        $namaKecamatan = 'Soreang';
+
+        if ($user && $user->isKecamatan() && $user->kecamatan) {
+            $idKecamatan = (string) $user->kecamatan_id;
+            $namaKecamatan = $user->kecamatan->nama;
+        }
+
         // Create a dummy template array
         $data = [
             [
-                '1', 'Soreang', '32.04.14.2001', 'Desa Sukamaju', 'H. Ahmad', 'Jl Raya Sukamaju No 1', '081234567890', '-7.0342', '107.5255', '5000', '150', 'Aktif'
+                $idKecamatan, $namaKecamatan, '32.04.14.2001', 'Desa Sukamaju', 'H. Ahmad', 'Jl Raya Sukamaju No 1', '081234567890', '-7.0342', '107.5255', '5000', '150', 'Aktif'
             ]
         ];
 

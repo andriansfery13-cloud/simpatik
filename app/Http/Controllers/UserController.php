@@ -8,9 +8,133 @@ use App\Models\Desa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Exports\UserExport;
+use App\Imports\UserImport;
+use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Illuminate\Support\Facades\Response;
 
 class UserController extends Controller
 {
+    public function export(Request $request)
+    {
+        $user = auth()->user();
+        $kecamatanId = $user->isKabupaten() ? null : $user->kecamatan_id;
+        return Excel::download(new UserExport($kecamatanId), 'data_pengguna_simpatik.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xlsx,xls,csv|max:10240'
+        ]);
+
+        try {
+            Excel::import(new UserImport, $request->file('file_excel'));
+            return redirect()->route('users.index')->with('success', 'Data pengguna berhasil diimport.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat import: ' . $e->getMessage());
+        }
+    }
+
+    public function downloadTemplate()
+    {
+        $spreadsheet = new Spreadsheet();
+        
+        // Sheet 1: Template Data
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Template Import User');
+        $sheet->setCellValue('A1', 'nama_lengkap');
+        $sheet->setCellValue('B1', 'username');
+        $sheet->setCellValue('C1', 'email');
+        $sheet->setCellValue('D1', 'password');
+        $sheet->setCellValue('E1', 'role');
+        $sheet->setCellValue('F1', 'id_kecamatan');
+        $sheet->setCellValue('G1', 'id_desa');
+        $sheet->setCellValue('H1', 'status_aktif');
+        
+        // Example data
+        $sheet->setCellValue('A2', 'Andi Operator');
+        $sheet->setCellValue('B2', 'andi.opr');
+        $sheet->setCellValue('C2', 'andi@mail.com');
+        $sheet->setCellValue('D2', 'Rahasia123!');
+        $sheet->setCellValue('E2', 'operator_desa');
+        $sheet->setCellValue('F2', '1');
+        $sheet->setCellValue('G2', '1');
+        $sheet->setCellValue('H2', 'Aktif');
+        
+        // Styling header
+        $headerStyle = [
+            'font' => ['bold' => true],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'D9E1F2']
+            ]
+        ];
+        $sheet->getStyle('A1:H1')->applyFromArray($headerStyle);
+
+        // Sheet 2: Referensi ID Wilayah
+        $user = auth()->user();
+        $refSheet = $spreadsheet->createSheet();
+        $refSheet->setTitle('Referensi ID Wilayah');
+        
+        $refSheet->setCellValue('A1', 'ID Kecamatan');
+        $refSheet->setCellValue('B1', 'Nama Kecamatan');
+        $refSheet->setCellValue('D1', 'ID Desa');
+        $refSheet->setCellValue('E1', 'Nama Desa');
+        $refSheet->setCellValue('F1', 'ID Kecamatan');
+        
+        $refSheet->getStyle('A1:F1')->applyFromArray($headerStyle);
+        
+        // Populate Data Kecamatan & Desa berdasarkan role
+        if ($user->isKabupaten()) {
+            $kecamatans = Kecamatan::all();
+            $desas = Desa::with('kecamatan')->get();
+        } else {
+            $kecamatans = Kecamatan::where('id', $user->kecamatan_id)->get();
+            $desas = Desa::where('kecamatan_id', $user->kecamatan_id)->get();
+        }
+
+        $rowKec = 2;
+        foreach ($kecamatans as $kec) {
+            $refSheet->setCellValue('A' . $rowKec, $kec->id);
+            $refSheet->setCellValue('B' . $rowKec, $kec->nama);
+            $rowKec++;
+        }
+
+        $rowDesa = 2;
+        foreach ($desas as $desa) {
+            $refSheet->setCellValue('D' . $rowDesa, $desa->id);
+            $refSheet->setCellValue('E' . $rowDesa, $desa->nama);
+            $refSheet->setCellValue('F' . $rowDesa, $desa->kecamatan_id);
+            $rowDesa++;
+        }
+        
+        // Sheet 3: Referensi Role
+        $roleSheet = $spreadsheet->createSheet();
+        $roleSheet->setTitle('Referensi Role');
+        $roleSheet->setCellValue('A1', 'Role Tersedia');
+        $roleSheet->getStyle('A1')->applyFromArray($headerStyle);
+        
+        $availableRoles = $user->isKabupaten() 
+            ? ['admin', 'bupati', 'sekda', 'dpmd', 'bappeda', 'inspektorat', 'camat', 'sekcam', 'kasi_pmd', 'operator_kecamatan', 'kepala_desa', 'sekretaris_desa', 'operator_desa']
+            : ['kepala_desa', 'sekretaris_desa', 'operator_desa'];
+            
+        $rowRole = 2;
+        foreach ($availableRoles as $role) {
+            $roleSheet->setCellValue('A' . $rowRole, $role);
+            $rowRole++;
+        }
+
+        $spreadsheet->setActiveSheetIndex(0);
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'Template_Import_User.xlsx';
+        $tempFile = tempnam(sys_get_temp_dir(), $fileName);
+        $writer->save($tempFile);
+        
+        return Response::download($tempFile, $fileName)->deleteFileAfterSend(true);
+    }
     /**
      * Display a listing of the resource.
      */

@@ -4,12 +4,20 @@ namespace App\Imports;
 
 use App\Models\Desa;
 use App\Models\Kecamatan;
+use App\Models\User;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithUpserts;
 
 class DesaImport implements ToModel, WithHeadingRow, WithUpserts
 {
+    protected ?User $user;
+
+    public function __construct(?User $user = null)
+    {
+        $this->user = $user;
+    }
+
     /**
     * @param array $row
     *
@@ -23,21 +31,7 @@ class DesaImport implements ToModel, WithHeadingRow, WithUpserts
         }
 
         // Auto find kecamatan by name or use provided ID
-        $kecamatanId = $row['id_kecamatan'] ?? null;
-        
-        // If no ID but name provided, try to find it
-        if (!$kecamatanId && !empty($row['nama_kecamatan'])) {
-            $kecamatan = Kecamatan::where('nama', 'LIKE', '%' . $row['nama_kecamatan'] . '%')->first();
-            if ($kecamatan) {
-                $kecamatanId = $kecamatan->id;
-            }
-        }
-
-        // Default to first kecamatan if nothing matches and we need a fallback for testing
-        // In a real strict app, we might throw an exception, but for now we fallback or skip
-        if (!$kecamatanId) {
-            $kecamatanId = Kecamatan::first()->id ?? 1;
-        }
+        $kecamatanId = $this->resolveKecamatanId($row);
 
         $isActive = true;
         if (isset($row['status_aktif'])) {
@@ -58,6 +52,32 @@ class DesaImport implements ToModel, WithHeadingRow, WithUpserts
             'luas_wilayah' => $row['luas_wilayah_ha'] ?? 0,
             'is_active' => $isActive,
         ]);
+    }
+
+    private function resolveKecamatanId(array $row): int
+    {
+        // Jika user level kecamatan → langsung kunci ke kecamatan user
+        if ($this->user && $this->user->isKecamatan()) {
+            return $this->user->kecamatan_id;
+        }
+
+        $kecamatanId = $row['id_kecamatan'] ?? null;
+        
+        // If no ID but name provided, try to find it
+        if (!$kecamatanId && !empty($row['nama_kecamatan'])) {
+            $kecamatan = Kecamatan::where('nama', 'LIKE', '%' . $row['nama_kecamatan'] . '%')->first();
+            if ($kecamatan) {
+                $kecamatanId = $kecamatan->id;
+            }
+        }
+
+        // Default to first kecamatan if nothing matches and we need a fallback for testing
+        // In a real strict app, we might throw an exception, but for now we fallback or skip
+        if (!$kecamatanId) {
+            $kecamatanId = Kecamatan::first()->id ?? 1;
+        }
+
+        return $kecamatanId;
     }
 
     /**

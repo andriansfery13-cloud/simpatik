@@ -5,16 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Kecamatan;
 use Illuminate\Http\Request;
 
-class KecamatanController extends Controller
+use Illuminate\Routing\Controllers\HasMiddleware;
+
+class KecamatanController extends Controller implements HasMiddleware
 {
-    public function __construct()
+    public static function middleware(): array
     {
-        $this->middleware(function ($request, $next) {
-            if (!auth()->user()->isAdmin()) {
-                abort(403, 'Hanya Super Admin yang dapat mengakses data kecamatan.');
+        return [
+            function ($request, $next) {
+                if (!auth()->user()->isAdmin()) {
+                    abort(403, 'Hanya Super Admin yang dapat mengakses data kecamatan.');
+                }
+                return $next($request);
             }
-            return $next($request);
-        });
+        ];
     }
 
     public function index(Request $request)

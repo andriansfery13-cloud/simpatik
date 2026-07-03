@@ -31,6 +31,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // User Management
+    Route::get('users/export', [UserController::class, 'export'])->name('users.export');
+    Route::post('users/import', [UserController::class, 'import'])->name('users.import');
+    Route::get('users/template', [UserController::class, 'downloadTemplate'])->name('users.template');
     Route::resource('users', UserController::class);
 
     // Kecamatan
@@ -45,6 +48,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Kegiatan
     Route::get('kegiatan/export', [KegiatanController::class, 'export'])->name('kegiatan.export');
     Route::post('kegiatan/import', [KegiatanController::class, 'import'])->name('kegiatan.import');
+    Route::post('kegiatan/import-ai', [App\Http\Controllers\AiImportController::class, 'importKegiatan'])->name('kegiatan.import.ai');
     Route::get('kegiatan/template', [KegiatanController::class, 'downloadTemplate'])->name('kegiatan.template');
     Route::resource('kegiatan', KegiatanController::class);
 

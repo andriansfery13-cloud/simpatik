@@ -169,7 +169,7 @@ class KegiatanController extends Controller
         ]);
 
         try {
-            Excel::import(new KegiatanImport, $request->file('file_excel'));
+            Excel::import(new KegiatanImport(auth()->user()), $request->file('file_excel'));
             return redirect()->route('kegiatan.index')->with('success', 'Data kegiatan berhasil diimport.');
         } catch (\Exception $e) {
             return redirect()->route('kegiatan.index')->with('error', 'Terjadi kesalahan saat import: ' . $e->getMessage());
@@ -186,13 +186,28 @@ class KegiatanController extends Controller
             'Tahun Anggaran', 'Periode Anggaran',
         ];
 
+        $user = auth()->user();
+        $idDesa = '1';
+        $namaDesa = 'Desa Sukamaju';
+
+        if ($user && $user->isDesa() && $user->desa) {
+            $idDesa = (string) $user->desa_id;
+            $namaDesa = $user->desa->nama;
+        } elseif ($user && $user->isKecamatan()) {
+            $desa = \App\Models\Desa::where('kecamatan_id', $user->kecamatan_id)->first();
+            if ($desa) {
+                $idDesa = (string) $desa->id;
+                $namaDesa = $desa->nama;
+            }
+        }
+
         $data = [
             [
-                '1', 'Desa Sukamaju', '1', 'Dana Desa 2024',
+                $idDesa, $namaDesa, '1', 'Dana Desa 2024',
                 'Pembangunan Jalan Desa', 'Pengecoran jalan lingkungan RT 03',
                 'RT 03 RW 01', '150000000', '0', '0',
                 '2024-03-01', '2024-06-30', 'Belum Mulai',
-                'CV Karya Mandiri', 'H. Ahmad', '2024', 'Semester 1',
+                'CV Karya Mandiri', 'H. Ahmad', date('Y'), 'Semester 1',
             ]
         ];
 

@@ -142,7 +142,7 @@ class AnggaranController extends Controller
         ]);
 
         try {
-            Excel::import(new AnggaranImport, $request->file('file_excel'));
+            Excel::import(new AnggaranImport(auth()->user()), $request->file('file_excel'));
             return redirect()->route('anggaran.index')->with('success', 'Data anggaran berhasil diimport.');
         } catch (\Exception $e) {
             return redirect()->route('anggaran.index')->with('error', 'Terjadi kesalahan saat import: ' . $e->getMessage());
@@ -157,10 +157,25 @@ class AnggaranController extends Controller
             'Status Earmark', 'Keterangan',
         ];
 
+        $user = auth()->user();
+        $idDesa = '1';
+        $namaDesa = 'Desa Sukamaju';
+
+        if ($user && $user->isDesa() && $user->desa) {
+            $idDesa = (string) $user->desa_id;
+            $namaDesa = $user->desa->nama;
+        } elseif ($user && $user->isKecamatan()) {
+            $desa = \App\Models\Desa::where('kecamatan_id', $user->kecamatan_id)->first();
+            if ($desa) {
+                $idDesa = (string) $desa->id;
+                $namaDesa = $desa->nama;
+            }
+        }
+
         $data = [
             [
-                '1', 'Desa Sukamaju', '1', 'Dana Desa 2024',
-                '2024', '500000000', '0', 'earmarked', 'Alokasi DAK untuk infrastruktur',
+                $idDesa, $namaDesa, '1', 'Dana Desa ' . date('Y'),
+                date('Y'), '500000000', '0', 'earmarked', 'Alokasi DAK untuk infrastruktur',
             ]
         ];
 
