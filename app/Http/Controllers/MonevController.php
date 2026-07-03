@@ -18,18 +18,66 @@ class MonevController extends Controller
         $user = auth()->user();
         if ($user->isDesa()) abort(403);
 
-        $query = Desa::withAvg('monevs as rata_rata_skor', 'skor_total')
-            ->withCount('monevs as total_monev')
-            ->orderBy('nama');
-
         if ($user->isKecamatan()) {
-            $query->where('kecamatan_id', $user->kecamatan_id);
+            // Kecamatan user: show list of Desa
+            $desas = Desa::withAvg('monevs as rata_rata_skor', 'skor_total')
+                ->withCount('monevs as total_monev')
+                ->where('kecamatan_id', $user->kecamatan_id)
+                ->orderBy('nama')
+                ->get();
+            $desaTerbaik = $desas->where('total_monev', '>', 0)->sortByDesc('rata_rata_skor')->first();
+
+            return view('monev.index', [
+                'mode' => 'desa',
+                'items' => $desas,
+                'desaTerbaik' => $desaTerbaik,
+                'kecamatanTerbaik' => null,
+            ]);
         }
 
-        $desas = $query->get();
-        $terbaik = $desas->where('total_monev', '>', 0)->sortByDesc('rata_rata_skor')->first();
+        // Super Admin: show list of Kecamatan
+        $kecamatans = \App\Models\Kecamatan::with(['desas.monevs'])->orderBy('nama')->get();
+        $kecamatanStats = $kecamatans->map(function ($kec) {
+            $totalMonev = $kec->desas->sum(fn($d) => $d->monevs->count());
+            $avgSkor = 0;
+            if ($totalMonev > 0) {
+                $totalSkor = $kec->desas->sum(fn($d) => $d->monevs->sum('skor_total'));
+                $avgSkor = $totalSkor / $totalMonev;
+            }
+            $kec->rata_rata_skor = $avgSkor;
+            $kec->total_monev = $totalMonev;
+            $kec->total_desa = $kec->desas->count();
+            return $kec;
+        });
+        $kecamatanTerbaik = $kecamatanStats->where('total_monev', '>', 0)->sortByDesc('rata_rata_skor')->first();
 
-        return view('monev.index', compact('desas', 'terbaik'));
+        // Also get desa terbaik for Super Admin
+        $allDesas = Desa::withAvg('monevs as rata_rata_skor', 'skor_total')
+            ->withCount('monevs as total_monev')
+            ->get();
+        $desaTerbaik = $allDesas->where('total_monev', '>', 0)->sortByDesc('rata_rata_skor')->first();
+
+        return view('monev.index', [
+            'mode' => 'kecamatan',
+            'items' => $kecamatanStats,
+            'desaTerbaik' => $desaTerbaik,
+            'kecamatanTerbaik' => $kecamatanTerbaik,
+            'desas' => $allDesas,
+        ]);
+    }
+
+    public function kecamatanDesa(\App\Models\Kecamatan $kecamatan)
+    {
+        $user = auth()->user();
+        if ($user->isDesa()) abort(403);
+
+        $desas = Desa::withAvg('monevs as rata_rata_skor', 'skor_total')
+            ->withCount('monevs as total_monev')
+            ->where('kecamatan_id', $kecamatan->id)
+            ->orderBy('nama')
+            ->get();
+
+        return view('monev.kecamatan', compact('kecamatan', 'desas'));
     }
 
     public function desaAnggaran(Desa $desa)

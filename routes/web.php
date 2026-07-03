@@ -87,6 +87,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Monev Desa
     Route::get('/monev', [App\Http\Controllers\MonevController::class, 'index'])->name('monev.index');
+    Route::get('/monev/kecamatan/{kecamatan}', [App\Http\Controllers\MonevController::class, 'kecamatanDesa'])->name('monev.kecamatan');
     Route::get('/monev/desa/{desa}', [App\Http\Controllers\MonevController::class, 'desaAnggaran'])->name('monev.desa');
     // Laporan Hasil Monev
     Route::get('/laporan-monev', [App\Http\Controllers\LaporanMonevController::class, 'index'])->name('laporan.monev.index');

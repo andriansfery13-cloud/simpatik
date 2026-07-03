@@ -25,10 +25,23 @@
                 {{-- Pemilihan Data --}}
                 <div>
                     <h3 class="text-lg font-bold text-gray-800 mb-4 border-b border-gray-100 pb-2">1. Pilih Data Anggaran & Tahap</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="space-y-2">
+                            <label class="form-label font-bold text-gray-700">Pilih Kecamatan</label>
+                            <select id="kecamatan_select" class="form-select w-full" {{ $isKecamatanFixed ? 'disabled' : '' }}
+                                onchange="filterByKecamatan(this.value)">
+                                <option value="">-- Semua Kecamatan --</option>
+                                @foreach($kecamatans as $kec)
+                                    <option value="{{ $kec->id }}" {{ $selectedKecamatanId == $kec->id ? 'selected' : '' }}>
+                                        {{ $kec->nama }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         <div class="space-y-2">
                             <label class="form-label font-bold text-gray-700">Pilih Desa</label>
-                            <select id="desa_select" class="form-select w-full" onchange="window.location.href='?desa_id='+this.value">
+                            <select id="desa_select" class="form-select w-full" onchange="filterByDesa(this.value)">
                                 <option value="">-- Pilih Desa --</option>
                                 @foreach($desas as $d)
                                     <option value="{{ $d->id }}" {{ $selectedDesa && $selectedDesa->id == $d->id ? 'selected' : '' }}>
@@ -165,6 +178,27 @@
         
         container.appendChild(row);
         timIndex++;
+    }
+
+    function filterByKecamatan(kecamatanId) {
+        let url = new URL(window.location.href);
+        url.searchParams.delete('desa_id');
+        if (kecamatanId) {
+            url.searchParams.set('kecamatan_id', kecamatanId);
+        } else {
+            url.searchParams.delete('kecamatan_id');
+        }
+        window.location.href = url.toString();
+    }
+
+    function filterByDesa(desaId) {
+        let url = new URL(window.location.href);
+        if (desaId) {
+            url.searchParams.set('desa_id', desaId);
+        } else {
+            url.searchParams.delete('desa_id');
+        }
+        window.location.href = url.toString();
     }
 </script>
 @endsection

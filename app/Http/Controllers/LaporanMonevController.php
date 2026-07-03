@@ -16,9 +16,23 @@ class LaporanMonevController extends Controller
             abort(403, 'Hanya Kecamatan/Kabupaten yang dapat mencetak Laporan.');
         }
 
-        $desas = $user->isKecamatan() 
-            ? Desa::where('kecamatan_id', $user->kecamatan_id)->get()
-            : Desa::all();
+        $kecamatans = collect();
+        $selectedKecamatanId = $request->kecamatan_id;
+        $isKecamatanFixed = false;
+
+        if ($user->isKecamatan()) {
+            $kecamatans = \App\Models\Kecamatan::where('id', $user->kecamatan_id)->get();
+            $selectedKecamatanId = $user->kecamatan_id;
+            $isKecamatanFixed = true;
+            $desas = Desa::where('kecamatan_id', $user->kecamatan_id)->orderBy('nama')->get();
+        } else {
+            $kecamatans = \App\Models\Kecamatan::orderBy('nama')->get();
+            if ($selectedKecamatanId) {
+                $desas = Desa::where('kecamatan_id', $selectedKecamatanId)->orderBy('nama')->get();
+            } else {
+                $desas = Desa::orderBy('nama')->get();
+            }
+        }
 
         $selectedDesa = $request->desa_id ? Desa::find($request->desa_id) : null;
         $anggarans = collect();
@@ -27,7 +41,7 @@ class LaporanMonevController extends Controller
             $anggarans = Anggaran::with('sumberDana')->where('desa_id', $selectedDesa->id)->get();
         }
 
-        return view('laporan.monev_index', compact('desas', 'selectedDesa', 'anggarans'));
+        return view('laporan.monev_index', compact('kecamatans', 'selectedKecamatanId', 'isKecamatanFixed', 'desas', 'selectedDesa', 'anggarans'));
     }
 
     public function cetak(Request $request)
