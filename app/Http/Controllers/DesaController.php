@@ -58,6 +58,9 @@ class DesaController extends Controller
             'luas_wilayah' => 'nullable|numeric|min:0',
         ]);
 
+        $validated['jumlah_penduduk'] = $validated['jumlah_penduduk'] ?? 0;
+        $validated['luas_wilayah'] = $validated['luas_wilayah'] ?? 0;
+
         Desa::create($validated);
         return redirect()->route('desa.index')->with('success', 'Data desa berhasil ditambahkan.');
     }
@@ -89,6 +92,9 @@ class DesaController extends Controller
             'jumlah_penduduk' => 'nullable|integer|min:0',
             'luas_wilayah' => 'nullable|numeric|min:0',
         ]);
+
+        $validated['jumlah_penduduk'] = $validated['jumlah_penduduk'] ?? 0;
+        $validated['luas_wilayah'] = $validated['luas_wilayah'] ?? 0;
 
         $desa->update($validated);
         return redirect()->route('desa.index')->with('success', 'Data desa berhasil diperbarui.');

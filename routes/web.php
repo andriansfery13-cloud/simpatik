@@ -64,9 +64,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Settings (Super Admin Only)
+    // Settings
     Route::get('/settings/integrations', [App\Http\Controllers\SettingController::class, 'integrations'])->name('settings.integrations');
-    Route::post('/settings/integrations', [App\Http\Controllers\SettingController::class, 'updateIntegrations'])->name('settings.integrations.update');
+    Route::put('/settings/integrations', [App\Http\Controllers\SettingController::class, 'updateIntegrations'])->name('settings.integrations.update');
+    
+    Route::get('/settings/kop-surat', [App\Http\Controllers\KopSuratController::class, 'edit'])->name('settings.kop-surat');
+    Route::put('/settings/kop-surat', [App\Http\Controllers\KopSuratController::class, 'update'])->name('settings.kop-surat.update');
 
     // Advanced Modules
     Route::view('/monitoring-progres', 'modules.monitoring-progres')->name('monitoring.progres');
@@ -84,10 +87,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Monev Desa
     Route::get('/monev', [App\Http\Controllers\MonevController::class, 'index'])->name('monev.index');
+    Route::get('/monev/desa/{desa}', [App\Http\Controllers\MonevController::class, 'desaAnggaran'])->name('monev.desa');
+    // Laporan Hasil Monev
+    Route::get('/laporan-monev', [App\Http\Controllers\LaporanMonevController::class, 'index'])->name('laporan.monev.index');
+    Route::post('/laporan-monev/cetak', [App\Http\Controllers\LaporanMonevController::class, 'cetak'])->name('laporan.monev.cetak');
+    Route::get('/monev/anggaran/{anggaran}', [App\Http\Controllers\MonevController::class, 'anggaranKegiatan'])->name('monev.anggaran');
     Route::get('/monev/wizard', [App\Http\Controllers\MonevController::class, 'wizard'])->name('monev.wizard');
     Route::get('/monev/kegiatan/{kegiatan}/create', [App\Http\Controllers\MonevController::class, 'create'])->name('monev.create');
     Route::post('/monev/kegiatan/{kegiatan}', [App\Http\Controllers\MonevController::class, 'store'])->name('monev.store');
+    
+    // Monev CRUD Actions
     Route::get('/monev/{monev}', [App\Http\Controllers\MonevController::class, 'show'])->name('monev.show');
+    Route::get('/monev/{monev}/edit', [App\Http\Controllers\MonevController::class, 'edit'])->name('monev.edit');
+    Route::put('/monev/{monev}', [App\Http\Controllers\MonevController::class, 'update'])->name('monev.update');
+    Route::delete('/monev/{monev}', [App\Http\Controllers\MonevController::class, 'destroy'])->name('monev.destroy');
+    
     Route::post('/monev/{monev}/ai', [App\Http\Controllers\MonevController::class, 'generateAi'])->name('monev.generate_ai');
 });
 

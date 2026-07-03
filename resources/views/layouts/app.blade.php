@@ -173,6 +173,24 @@
                 </a>
                 @endif
 
+                {{-- Laporan Monev --}}
+                @if(auth()->user()->isKabupaten() || auth()->user()->isKecamatan())
+                <a href="{{ route('laporan.monev.index') }}" class="sidebar-menu-item {{ request()->routeIs('laporan.monev.*') ? 'active' : '' }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>Laporan Monev</span>
+                </a>
+                @endif
+                
+                @if(auth()->user()->isKecamatan() || auth()->user()->isDesa())
+                <div class="pt-4 mt-4 border-t border-gray-100">
+                    <p class="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pengaturan</p>
+                    <a href="{{ route('settings.kop-surat') }}" class="sidebar-menu-item {{ request()->routeIs('settings.kop-surat') ? 'active' : '' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76"></path></svg>
+                        <span>Kop Surat</span>
+                    </a>
+                </div>
+                @endif
+
                 {{-- Pengaturan Sistem (Super Admin) --}}
                 @if(auth()->user()->isKabupaten())
                 <a href="{{ route('settings.integrations') }}" class="sidebar-menu-item {{ request()->routeIs('settings.*') ? 'active' : '' }}">

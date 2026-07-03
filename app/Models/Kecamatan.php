@@ -23,6 +23,11 @@ class Kecamatan extends Model
         return $this->hasMany(Desa::class);
     }
 
+    public function kopSurat()
+    {
+        return $this->morphOne(KopSurat::class, 'koppable');
+    }
+
     public function users(): HasMany
     {
         return $this->hasMany(User::class);

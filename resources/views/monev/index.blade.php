@@ -24,21 +24,22 @@
     {{-- AI Ranking Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         {{-- Desa Terbaik --}}
-        <div class="bg-gradient-to-br from-green-500 to-green-700 rounded-xl p-5 text-white shadow-lg relative overflow-hidden">
-            <div class="absolute -right-4 -bottom-4 opacity-20">
+        <div class="bg-white rounded-xl p-5 shadow-card border border-green-200 relative overflow-hidden text-gray-800">
+            <div class="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
+            <div class="absolute -right-4 -bottom-4 opacity-5 text-green-600">
                 <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
             </div>
             <div class="relative z-10">
-                <p class="text-green-100 text-xs font-bold uppercase tracking-wider mb-1">🏆 Desa Terbaik (Rata-rata Tertinggi)</p>
+                <p class="text-green-700 text-xs font-bold uppercase tracking-wider mb-2">🏆 Desa Terbaik (Rata-rata Tertinggi)</p>
                 @if($terbaik)
-                    <h3 class="text-2xl font-bold">{{ $terbaik->nama }}</h3>
-                    <p class="text-green-100 text-sm mb-3">Kec. {{ $terbaik->kecamatan->nama }}</p>
-                    <div class="inline-flex items-center px-3 py-1 bg-white/20 rounded-lg backdrop-blur-sm border border-white/30">
-                        <span class="text-xl font-black">{{ number_format($terbaik->rata_rata_skor, 1) }}</span>
-                        <span class="text-xs ml-1 font-medium">/ 100</span>
+                    <h3 class="text-2xl font-black text-gray-900">{{ $terbaik->nama }}</h3>
+                    <p class="text-gray-500 text-sm mb-4 font-medium">Kec. {{ $terbaik->kecamatan->nama }}</p>
+                    <div class="inline-flex items-center px-4 py-1.5 bg-green-50 rounded-lg border border-green-200">
+                        <span class="text-2xl font-black text-green-700">{{ number_format($terbaik->rata_rata_skor, 1) }}</span>
+                        <span class="text-xs ml-1 font-bold text-green-600">/ 100</span>
                     </div>
                 @else
-                    <h3 class="text-lg font-medium text-white/70 italic mt-2">Belum ada data Monev.</h3>
+                    <h3 class="text-lg font-medium text-gray-400 italic mt-2">Belum ada data Monev.</h3>
                 @endif
             </div>
         </div>
@@ -52,6 +53,9 @@
                 </h3>
             </div>
             <div class="p-0 flex-1 overflow-y-auto max-h-[140px]">
+                @php
+                    $perluPembinaan = $desas->filter(fn($d) => $d->total_monev > 0 && $d->rata_rata_skor < 75);
+                @endphp
                 @if($perluPembinaan->count() > 0)
                     <ul class="divide-y divide-gray-100">
                         @foreach($perluPembinaan as $desa)
@@ -78,61 +82,79 @@
     {{-- History Monev Table --}}
     <div class="bg-white rounded-xl shadow-card border border-gray-100 overflow-hidden mt-6">
         <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-            <h3 class="font-bold text-gray-800">Riwayat Monitoring & Evaluasi</h3>
+            <h3 class="font-bold text-gray-800">Daftar Desa</h3>
         </div>
-        <div class="overflow-x-auto">
-            <table class="data-table w-full">
-                <thead>
-                    <tr>
-                        <th>Tanggal</th>
-                        <th>Desa</th>
-                        <th>Kegiatan</th>
-                        <th class="text-center">Skor Total</th>
-                        <th class="text-center">Kategori</th>
-                        <th>Penilai</th>
-                        <th class="text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50 text-sm">
-                    @forelse($monevs as $monev)
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="text-gray-600">{{ $monev->tanggal_monev->format('d/m/Y') }}</td>
-                        <td>
-                            <p class="font-bold text-gray-800">{{ $monev->desa->nama }}</p>
-                            <p class="text-[10px] text-gray-500">Kec. {{ $monev->desa->kecamatan->nama }}</p>
-                        </td>
-                        <td>
-                            <p class="font-medium text-gray-700 line-clamp-2 max-w-xs" title="{{ $monev->kegiatan->nama_kegiatan }}">{{ $monev->kegiatan->nama_kegiatan }}</p>
-                            <p class="text-[10px] text-gray-500">TA: {{ $monev->kegiatan->tahun_anggaran }}</p>
-                        </td>
-                        <td class="text-center">
-                            <span class="font-bold text-lg {{ $monev->skor_total >= 75 ? 'text-green-600' : 'text-red-600' }}">{{ $monev->skor_total }}</span>
-                        </td>
-                        <td class="text-center">
-                            <span class="px-2 py-1 rounded-full text-[10px] font-bold border {{ $monev->kategori_color }}">
-                                {{ $monev->kategori }}
-                            </span>
-                        </td>
-                        <td class="text-gray-500 text-xs">{{ $monev->user->name }}</td>
-                        <td class="text-center">
-                            <a href="{{ route('monev.show', $monev) }}" class="inline-flex items-center justify-center p-1.5 bg-blue-50 text-blue-600 rounded hover:bg-blue-100" title="Lihat Detail & Insight">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                            </a>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="7" class="text-center py-8 text-gray-500 text-sm">Belum ada riwayat Monev.</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+        <div class="p-6">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 border-y border-gray-100">
+                            <th class="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Desa</th>
+                            <th class="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Kepala Desa</th>
+                            <th class="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Kegiatan di-Monev</th>
+                            <th class="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Rata-rata Skor</th>
+                            <th class="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Status</th>
+                            <th class="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse($desas as $desa)
+                        <tr class="hover:bg-gray-50/50 transition-colors">
+                            <td class="p-4">
+                                <p class="font-bold text-gray-800">{{ $desa->nama }}</p>
+                                <p class="text-xs text-gray-500">Kode: {{ $desa->kode }}</p>
+                            </td>
+                            <td class="p-4 text-sm text-gray-700">
+                                {{ $desa->kepala_desa ?? '-' }}
+                            </td>
+                            <td class="p-4 text-sm text-gray-700 font-medium">
+                                {{ $desa->total_monev }} Kegiatan
+                            </td>
+                            <td class="p-4">
+                                <span class="font-bold text-gray-800">{{ number_format($desa->rata_rata_skor, 1) }}</span> <span class="text-xs text-gray-500">/ 100</span>
+                            </td>
+                            <td class="p-4 text-center">
+                                @php
+                                    $score = $desa->rata_rata_skor;
+                                    if ($desa->total_monev == 0) {
+                                        $cat = 'Belum Ada';
+                                        $color = 'gray';
+                                    } elseif ($score >= 85) {
+                                        $cat = 'Sangat Baik';
+                                        $color = 'success';
+                                    } elseif ($score >= 70) {
+                                        $cat = 'Baik';
+                                        $color = 'primary';
+                                    } elseif ($score >= 55) {
+                                        $cat = 'Cukup';
+                                        $color = 'warning';
+                                    } else {
+                                        $cat = 'Perlu Pembinaan';
+                                        $color = 'danger';
+                                    }
+                                @endphp
+                                <span class="badge badge-{{ $color }}">{{ $cat }}</span>
+                            </td>
+                            <td class="text-center p-4">
+                                <a href="{{ route('monev.desa', $desa) }}" class="inline-flex items-center justify-center px-4 py-2 bg-simpatik-50 text-simpatik-700 rounded-lg hover:bg-simpatik-100 font-bold text-sm transition-colors border border-simpatik-200">
+                                    Lihat Anggaran &rarr;
+                                </a>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" class="p-8 text-center text-gray-500">
+                                <div class="flex flex-col items-center justify-center">
+                                    <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                    <p>Belum ada data desa.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
-        @if($monevs->hasPages())
-        <div class="p-4 border-t border-gray-100">
-            {{ $monevs->links() }}
-        </div>
-        @endif
     </div>
 </div>
 @endsection

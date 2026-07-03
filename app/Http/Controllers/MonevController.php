@@ -16,40 +16,60 @@ class MonevController extends Controller
     public function index()
     {
         $user = auth()->user();
-        
-        // Hanya bisa diakses Kabupaten & Kecamatan
-        if ($user->isDesa()) {
-            abort(403, 'Akses ditolak.');
-        }
+        if ($user->isDesa()) abort(403);
 
-        $query = Monev::with(['desa', 'kegiatan', 'user'])->latest();
+        $query = Desa::withAvg('monevs as rata_rata_skor', 'skor_total')
+            ->withCount('monevs as total_monev')
+            ->orderBy('nama');
 
         if ($user->isKecamatan()) {
-            $query->whereHas('desa', function($q) use ($user) {
-                $q->where('kecamatan_id', $user->kecamatan_id);
-            });
+            $query->where('kecamatan_id', $user->kecamatan_id);
         }
 
-        $monevs = $query->paginate(15);
+        $desas = $query->get();
+        $terbaik = $desas->where('total_monev', '>', 0)->sortByDesc('rata_rata_skor')->first();
 
-        // Calculate Ranking (Average score per desa)
-        $desaRankingQuery = Desa::withCount('monevs')
-            ->withAvg('monevs as rata_rata_skor', 'skor_total');
-            
-        if ($user->isKecamatan()) {
-            $desaRankingQuery->where('kecamatan_id', $user->kecamatan_id);
-        }
-        
-        $desaRankings = $desaRankingQuery->having('monevs_count', '>', 0)
-            ->orderByDesc('rata_rata_skor')
+        return view('monev.index', compact('desas', 'terbaik'));
+    }
+
+    public function desaAnggaran(Desa $desa)
+    {
+        $user = auth()->user();
+        if ($user->isDesa()) abort(403);
+
+        $anggarans = Anggaran::with('sumberDana')
+            ->where('desa_id', $desa->id)
+            ->orderByDesc('tahun_anggaran')
             ->get();
 
-        $terbaik = $desaRankings->first();
-        $perluPembinaan = $desaRankings->filter(function($desa) {
-            return $desa->rata_rata_skor < 75;
-        });
+        foreach ($anggarans as $anggaran) {
+            $baseQuery = Monev::whereHas('kegiatan', function ($q) use ($anggaran) {
+                $q->where('desa_id', $anggaran->desa_id)
+                  ->where('sumber_dana_id', $anggaran->sumber_dana_id)
+                  ->where('tahun_anggaran', $anggaran->tahun_anggaran);
+            });
+            $anggaran->rata_rata_skor = (clone $baseQuery)->avg('skor_total') ?? 0;
+            $anggaran->total_monev = (clone $baseQuery)->count();
+        }
 
-        return view('monev.index', compact('monevs', 'desaRankings', 'terbaik', 'perluPembinaan'));
+        return view('monev.desa', compact('desa', 'anggarans'));
+    }
+
+    public function anggaranKegiatan(Anggaran $anggaran)
+    {
+        $user = auth()->user();
+        if ($user->isDesa()) abort(403);
+
+        $anggaran->load(['desa', 'sumberDana']);
+
+        $monevs = Monev::with(['kegiatan', 'user'])
+            ->whereHas('kegiatan', function ($q) use ($anggaran) {
+                $q->where('desa_id', $anggaran->desa_id)
+                  ->where('sumber_dana_id', $anggaran->sumber_dana_id)
+                  ->where('tahun_anggaran', $anggaran->tahun_anggaran);
+            })->latest()->paginate(15);
+
+        return view('monev.anggaran', compact('anggaran', 'monevs'));
     }
 
     public function wizard(Request $request)
@@ -154,6 +174,76 @@ class MonevController extends Controller
     {
         $monev->load(['desa.kecamatan', 'kegiatan', 'user']);
         return view('monev.show', compact('monev'));
+    }
+
+    public function edit(Monev $monev)
+    {
+        $user = auth()->user();
+        if ($user->isDesa()) abort(403);
+        
+        $kegiatan = $monev->kegiatan;
+        return view('monev.edit', compact('monev', 'kegiatan'));
+    }
+
+    public function update(Request $request, Monev $monev)
+    {
+        $user = auth()->user();
+        if ($user->isDesa()) abort(403);
+
+        // Evaluasi Perencanaan
+        $perencanaan = $request->input('perencanaan', []);
+        $skorPerencanaan = (count($perencanaan) / 4) * 100;
+
+        // Evaluasi Keuangan
+        $keuangan = $request->input('keuangan', []);
+        $skorKeuangan = (count($keuangan) / 5) * 100;
+
+        // Evaluasi Pelaksanaan
+        $pelaksanaan = $request->input('pelaksanaan', []);
+        $skorPelaksanaan = (count($pelaksanaan) / 4) * 100;
+
+        // Evaluasi Fisik
+        $fisik = $request->input('fisik', []);
+        if (in_array('bukan_fisik', $fisik)) {
+            $skorFisik = 100;
+        } else {
+            $skorFisik = (count($fisik) / 4) * 100;
+        }
+
+        // Evaluasi Pelaporan
+        $pelaporan = $request->input('pelaporan', []);
+        $skorPelaporan = (count($pelaporan) / 3) * 100;
+
+        // Skor Total
+        $skorTotal = ($skorPerencanaan + $skorKeuangan + $skorPelaksanaan + $skorFisik + $skorPelaporan) / 5;
+
+        // Jika skor berubah signifikan, kita mungkin perlu reset AI Insight, tapi biarkan dulu untuk kesederhanaan
+        $monev->update([
+            'aspek_perencanaan' => $perencanaan,
+            'aspek_keuangan' => $keuangan,
+            'aspek_pelaksanaan' => $pelaksanaan,
+            'aspek_fisik' => $fisik,
+            'aspek_pelaporan' => $pelaporan,
+
+            'skor_perencanaan' => min($skorPerencanaan, 100),
+            'skor_keuangan' => min($skorKeuangan, 100),
+            'skor_pelaksanaan' => min($skorPelaksanaan, 100),
+            'skor_fisik' => min($skorFisik, 100),
+            'skor_pelaporan' => min($skorPelaporan, 100),
+            'skor_total' => min($skorTotal, 100),
+        ]);
+
+        return redirect()->route('monev.show', $monev)->with('success', 'Data Hasil Monev berhasil diperbarui!');
+    }
+
+    public function destroy(Monev $monev)
+    {
+        $user = auth()->user();
+        if ($user->isDesa()) abort(403);
+
+        $monev->delete();
+
+        return redirect()->route('monev.index')->with('success', 'Data Hasil Monev berhasil dihapus!');
     }
 
     public function generateAi(Monev $monev)

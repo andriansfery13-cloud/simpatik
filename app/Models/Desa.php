@@ -52,6 +52,11 @@ class Desa extends Model
         return $this->hasMany(Monev::class);
     }
 
+    public function kopSurat()
+    {
+        return $this->morphOne(KopSurat::class, 'koppable');
+    }
+
     public function getTotalKegiatanAttribute(): int
     {
         return $this->kegiatans()->count();
