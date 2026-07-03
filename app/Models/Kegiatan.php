@@ -91,6 +91,11 @@ class Kegiatan extends Model
         return $this->hasMany(Monitoring::class);
     }
 
+    public function monev(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Monev::class);
+    }
+
     public function getPersentaseKeuanganAttribute(): float
     {
         if ($this->pagu_anggaran == 0) return 0;

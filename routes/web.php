@@ -81,6 +81,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/ai-analytics', [App\Http\Controllers\AiAnalyticsController::class, 'index'])->name('ai.analytics');
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
     Route::post('/laporan/generate', [LaporanController::class, 'generate'])->name('laporan.generate');
+
+    // Monev Desa
+    Route::get('/monev', [App\Http\Controllers\MonevController::class, 'index'])->name('monev.index');
+    Route::get('/monev/wizard', [App\Http\Controllers\MonevController::class, 'wizard'])->name('monev.wizard');
+    Route::get('/monev/kegiatan/{kegiatan}/create', [App\Http\Controllers\MonevController::class, 'create'])->name('monev.create');
+    Route::post('/monev/kegiatan/{kegiatan}', [App\Http\Controllers\MonevController::class, 'store'])->name('monev.store');
+    Route::get('/monev/{monev}', [App\Http\Controllers\MonevController::class, 'show'])->name('monev.show');
+    Route::post('/monev/{monev}/ai', [App\Http\Controllers\MonevController::class, 'generateAi'])->name('monev.generate_ai');
 });
 
 require __DIR__.'/auth.php';

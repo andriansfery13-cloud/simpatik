@@ -47,6 +47,11 @@ class Desa extends Model
         return $this->hasMany(User::class);
     }
 
+    public function monevs(): HasMany
+    {
+        return $this->hasMany(Monev::class);
+    }
+
     public function getTotalKegiatanAttribute(): int
     {
         return $this->kegiatans()->count();
